@@ -18,7 +18,7 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 void setup(){
   Serial.begin(9600);
-    Wire.begin(); // Enable i2c
+    Wire.begin(43); // Enable i2c
 
 }
 
@@ -26,10 +26,11 @@ void loop(){
   char key = keypad.getKey();
 
   if (key != NO_KEY){
-   // Serial.println(key);
+    Serial.println(key);  
      Wire.beginTransmission(44); // передача для устройства #44 (0x2c)
                                  // адрес устройства указывается в документации (datasheet)
-    Wire.write(val);             // отправка байта val
+    byte Dat[] = {1,val};         //1 - Button
+    Wire.write(Dat,2);             // отправка байта val
     Wire.endTransmission();     // передача данных
   }
 }

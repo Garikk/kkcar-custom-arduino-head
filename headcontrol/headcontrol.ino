@@ -24,7 +24,9 @@ const PROGMEM byte Eye_Left[][1024] =
   }
 };
 
+
 /* Bitmap data for right eye animation */
+
 const PROGMEM byte Eye_Right[][1024] =
 {
   { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x7F, 0x3F, 0x3F, 0x3F, 0x1F, 0x1F, 0x1F, 0x1F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0xCF, 0xCF, 0xCF, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x1F, 0x1F, 0x1F, 0x1F, 0x3D, 0x3C, 0x3C, 0x78, 0x78, 0xF8, 0xF0, 0xF0, 0xE1, 0xE1, 0xC1, 0x83, 0x83, 0x07, 0x07, 0x07, 0x0F, 0x0F, 0x1F, 0x1F, 0x3F, 0x3F, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -48,12 +50,22 @@ const PROGMEM byte Eye_Right[][1024] =
 };
 
 
-/* Module 1 digital pins */
+const char testString1 = "$E_1;1;1;0;2;0;0;123456789";
+const char testString2 = "$E_1;1;0;0;2;0;16;123456789";
+const char testString3 = "$E_1;1;0;0;2;0;32;123456789";
+const char testString4 = "$E_1;1;0;0;2;0;48;123456789";
+
+const char testString6 = "$E_1;1;1;0;2;0;0;123456789";
+const char testString7 = "$E_1;1;1;0;3;0;0;123456789";
+const char testString8 = "$E_1;1;0;0;3;0;24;123456789";
+const char testString9 = "$E_1;1;0;0;3;0;48;123456789";
+
+  /* Module 1 digital pins */
 #define CS_DI1 10
 #define DC_DI1 9
 #define RST_DI1 5
 
-/* Module 2 digital pins */
+  /* Module 2 digital pins */
 #define CS_DI2 7
 #define DC_DI2 6
 #define RST_DI2 8
@@ -61,264 +73,278 @@ const PROGMEM byte Eye_Right[][1024] =
 #define EYEOPEN 0
 #define EYECLOSED 1
 
-/* Create an instance of the library for each display (uncomment all lines below if you are using 3 modules) */
-HCuOLED HCuOLED1(SSD1307, CS_DI1, DC_DI1, RST_DI1); // For SH1106 displays (HCMODU0058 & HCMODU0059)
-HCuOLED HCuOLED2(SSD1307, CS_DI2, DC_DI2, RST_DI2); // For SH1106 displays (HCMODU0058 & HCMODU0059)
+  /* Create an instance of the library for each display (uncomment all lines below if you are using 3 modules) */
+  HCuOLED HCuOLED1(SSD1307, CS_DI1, DC_DI1, RST_DI1); // For SH1106 displays (HCMODU0058 & HCMODU0059)
+  HCuOLED HCuOLED2(SSD1307, CS_DI2, DC_DI2, RST_DI2); // For SH1106 displays (HCMODU0058 & HCMODU0059)
 
-byte val = 0;
-char HeadKey[2];
+  byte val = 0;
 
+  String inputString = "";
 
-String inputString = "";
+  const byte ROWS = 4; //four rows
+  const byte COLS = 4; //three columns
+  const String PFX_KEY = "$K_";
+  const String PFX_KEY_E = "$E_";
+  char keys[ROWS][COLS] = {
+    {'4', 'F', 'H', '5'},
+    {'3', 'R', 'A', 'M'},
+    {'2', 'B', 'U', 'O'},
+    {'1', 'C', 'D', 'S'}
+  };
+  byte rowPins[ROWS] = {4, 8, 2, 3}; //connect to the row pinouts of the keypad
+  byte colPins[COLS] = {A0, A1, A2, A3}; //connect to the column pinouts of the keypad
 
-const byte ROWS = 4; //four rows
-const byte COLS = 4; //three columns
-const String PFX_KEY = "$K_";
-char keys[ROWS][COLS] = {
-  {'4', 'F', 'H', '5'},
-  {'3', 'R', 'A', 'M'},
-  {'2', 'B', 'U', 'O'},
-  {'1', 'C', 'D', 'S'}
-};
-byte rowPins[ROWS] = {0, 8, 2, 3}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {A0, A1, A2, A3}; //connect to the column pinouts of the keypad
+  Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
-Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
+  //
+  // $[CMD];[OP1];[OP2];[OP3];[OP4];[OPn]
+  //
+  // CMD=1
+  // OP1 - Display number
+  // OP2 - Clear screen
+  // OP3 - Invert
+  // OP4 - Font
+  // OP5 - Position X
+  // OP6 - Position Y
+  // OP7 - Text
+  //
+  // CMD=2
+  // comming soon
+  //
 
-//
-// $[CMD];[OP1];[OP2];[OP3];[OP4];[OPn]
-//
-// CMD=1
-// OP1 - Display number
-// OP2 - Clear screen
-// OP3 - Invert
-// OP4 - Font
-// OP5 - Position X
-// OP6 - Position Y
-// OP7 - Text
-//
-// CMD=2
-// comming soon
-//
-
-void DrawText(byte Display, byte Clear, byte Invert, byte Font, byte PosX, byte PosY, char Text[])
-{
-
-  if (Display == 1)
+  void DrawText(byte Display, byte Clear, byte Invert, byte Font, byte PosX, byte PosY, char Text[])
   {
-    
-    //
-    if (Clear == 1)
-      HCuOLED1.ClearBuffer();
-    if (Invert == 1)
-      HCuOLED1.DrawMode(INVERT);
-    else
-      HCuOLED1.DrawMode(NORMAL);
-    if (Font == 1)
-      HCuOLED1.SetFont(Terminal_8pt);
-    else if (Font == 2)
-      HCuOLED1.SetFont(MedProp_11pt);
-    else if (Font == 3)
-      HCuOLED1.SetFont(LCDLarge_24pt);
-    //
-    HCuOLED1.Cursor(PosX, PosY);
-    //
-    HCuOLED2.Print(Text);
-    //
-    HCuOLED1.Refresh();
-    //
-  }
-  else if (Display == 2)
-  {
-    //
-    if (Clear == 1)
-      HCuOLED2.ClearBuffer();
-    if (Invert == 1)
-      HCuOLED2.DrawMode(INVERT);
-    else
-      HCuOLED2.DrawMode(NORMAL);
-    if (Font == 1)
-      HCuOLED2.SetFont(Terminal_8pt);
-    else if (Font == 2)
-      HCuOLED2.SetFont(MedProp_11pt);
-    else if (Font == 3)
-      HCuOLED2.SetFont(LCDLarge_24pt);
-    //
-    HCuOLED2.Cursor(PosX, PosY);
-    //
-    HCuOLED2.Print(Text);
-    //
-    HCuOLED2.Refresh();
-    //
-  }
 
-
-}
-
-void TextFunction1(String ExecLine)
-{
-  //
-  int Counter;
-  char *Read;
-  //
-  Counter = 1;
-  //
-  byte Display;
-  byte Clear;
-  byte Invert;
-  byte Font;
-  byte PosX;
-  byte PosY;
-  char *Text;
-  //
-
-  //
-  char ExecLineCA[ExecLine.length() + 1];
-  ExecLine.toCharArray(ExecLineCA, ExecLine.length()+1);
-  Read = strtok(ExecLineCA, ";");
-  while (Read != NULL)
-  {
-    Counter++;
-
-    switch (Counter)
+    if (Display == 1)
     {
-      case 3:
-        Display = String(Read).toInt();
-        break;
-      case 4:
-        Clear = String(Read).toInt();
-        break;
-      case 5:
-        Invert = String(Read).toInt();
-        break;
-      case 6:
-        Font = String(Read).toInt();
-        break;
-      case 7:
-        PosX = String(Read).toInt();
-        break;
-      case 8:
-        PosY = String(Read).toInt();
-        break;
-      case 9:
-        Text = Read;
-        break;
+
+      //
+      if (Clear == 1)
+        HCuOLED1.ClearBuffer();
+      if (Invert == 1)
+        HCuOLED1.DrawMode(INVERT);
+      else
+        HCuOLED1.DrawMode(NORMAL);
+      if (Font == 1)
+        HCuOLED1.SetFont(Terminal_8pt);
+      else if (Font == 2)
+        HCuOLED1.SetFont(MedProp_11pt);
+      else if (Font == 3)
+        HCuOLED1.SetFont(LCDLarge_24pt);
+      //
+      HCuOLED1.Cursor(PosX, PosY);
+      //
+      HCuOLED2.Print(Text);
+      //
+      HCuOLED1.Refresh();
+      //
     }
+    else if (Display == 2)
+    {
+      //
+      if (Clear == 1)
+        HCuOLED2.ClearBuffer();
+      if (Invert == 1)
+        HCuOLED2.DrawMode(INVERT);
+      else
+        HCuOLED2.DrawMode(NORMAL);
+      if (Font == 1)
+        HCuOLED2.SetFont(Terminal_8pt);
+      else if (Font == 2)
+        HCuOLED2.SetFont(MedProp_11pt);
+      else if (Font == 3)
+        HCuOLED2.SetFont(LCDLarge_24pt);
+      //
+      HCuOLED2.Cursor(PosX, PosY);
+      //
+      HCuOLED2.Print(Text);
+      //
+      HCuOLED2.Refresh();
+      //
+    }
+
+
+  }
+
+  void TextFunction1(char ExecLineCA[])
+  {
     //
-    Read = strtok(NULL, ";");
+    int Counter = 1;
+    char *Read;
+    //
+    byte Display = 1;
+    byte Clear = 1;
+    byte Invert = 0;
+    byte Font = 1;
+    byte PosX = 0;
+    byte PosY = 0;
+    char *Text;
+    //
+    Text = "no data";
+
+
+    Read = strtok(ExecLineCA, ";");
+    while (Read != NULL)
+    {
+      Counter++;
+
+      switch (Counter)
+      {
+        case 3:
+          Display = String(Read).toInt();
+          break;
+        case 4:
+          Clear = String(Read).toInt();
+          break;
+        case 5:
+          Invert = String(Read).toInt();
+          break;
+        case 6:
+          Font = String(Read).toInt();
+          break;
+        case 7:
+          PosX = String(Read).toInt();
+          break;
+        case 8:
+          PosY = String(Read).toInt();
+          break;
+        case 9:
+          Text = Read;
+          break;
+      }
+      //
+      Read = strtok(NULL, ";");
+    }
+
+
+
+    DrawText(Display,  Clear,  Invert,  Font,  PosX,  PosY, Text);
+
+
+
   }
 
-  DrawText(Display,  Clear,  Invert,  Font,  PosX,  PosY, Text);
-
-
-}
-
-void ExecFunction(int CMD, String ExecLine)
-{
-  switch (CMD) {
-    case 1:     //simple text line
-      TextFunction1(ExecLine);
-      break;
-    case 2:     //GFX Drawing
-      break;
-    case 3:     //Bitmap Drawing
-      break;
-    case 4:     //Offline mode
-      break;
-  }
-
-
-}
-
-
-
-void receiveEvent(String cmd) {
-  if (cmd.startsWith("$K_"))
+  void ExecFunction(int CMD, char ExecLine[])
   {
-    ExecFunction(1, cmd);
-  }
-  inputString = "";
-}
+    switch (CMD) {
+      case 1:     //simple text line
+        TextFunction1(ExecLine);
+        break;
+      case 2:     //GFX Drawing
+        break;
+      case 3:     //Bitmap Drawing
+        break;
+      case 4:     //Offline mode
+        break;
+    }
 
-void sendData() {
-  if (HeadKey[0] != '0')
-  {
-    HeadKey[0] = '0';
-  }
-}
 
-void serialEvent() {
-  while (Serial.available()) {
-    char inChar = (char)Serial.read();
-    inputString += inChar;
-    if (inChar == '\n') {
-      receiveEvent(inputString);
+  }
+
+
+
+  void receiveEvent(char cmd[]) {
+
+    Serial.println(cmd);
+    if (cmd[0] == '$' & cmd[1] == 'E' & cmd[2] == '_') //("$E_"))
+    {
+      ExecFunction(1, cmd);
+    }
+    if (cmd[0] == 'A' & cmd[1] == 'T' & cmd[2] == 'I')
+    {
+      Serial.println("KKSmarthead");
+      Serial.println("Custom head device, keymatrix and double oled spi displays");
+    }
+
+  }
+
+  void serialEvent() {
+    while (Serial.available()) {
+      char inChar = (char)Serial.read();
+      inputString += inChar;
+      if (inChar == '\n') {
+        char CharArr[inputString.length() + 1];
+        inputString.toCharArray(CharArr, inputString.length() + 1);
+        inputString = "";
+        receiveEvent(CharArr);
+      }
     }
   }
-}
-void setup() {
-  //Prepare displays
-  HCuOLED1.Reset();
-  HCuOLED2.Reset();
-  //Setup serial connection
-  Serial.begin(9600);
 
-}
 
-void PrintText(int Display, int X, int Y, int Font, char Text[])
-{
-  if (Display == 1)
-  {
-    HCuOLED1.Cursor(X, Y);
-    HCuOLED1.SetFont(Terminal_8pt);
-    HCuOLED1.Print(Text);
-  }
-  else
-  {
-    HCuOLED2.Cursor(X, Y);
-    HCuOLED2.SetFont(Terminal_8pt);
-    HCuOLED2.Print(Text);
+  void setup() {
+    //Prepare displays
+    HCuOLED1.Reset();
+    HCuOLED2.Reset();
+    //Setup serial connection
+    Serial.begin(9600);
+    //
+    keypad.addEventListener(keypadEvent);
+
   }
 
-}
-void loop() {
-  char key = keypad.getKey();
+  void PrintText(int Display, int X, int Y, int Font, char Text[])
+  {
+    if (Display == 1)
+    {
+      HCuOLED1.Cursor(X, Y);
+      HCuOLED1.SetFont(Terminal_8pt);
+      HCuOLED1.Print(Text);
+    }
+    else
+    {
+      HCuOLED2.Cursor(X, Y);
+      HCuOLED2.SetFont(Terminal_8pt);
+      HCuOLED2.Print(Text);
+    }
 
-  if (key != NO_KEY) {
-    Serial.println(PFX_KEY + key);
+  }
 
-    HeadKey[0] = '1';
-    HeadKey[1] = key;
+  void keypadEvent(KeypadEvent key) {
+    switch (keypad.getState()) {
+      case PRESSED:
+        ExecKey((char)key);
+        break;
+      case RELEASED:
+        //Serial.println("RL__"+ (String)key);
+        break;
+      case HOLD:
+        //Serial.println("HL__"+(String)key);
+        break;
+    }
+  }
 
-    if (HeadKey[1] == '1')
+  void ExecKey(char Key)
+  {
+    if (Key == '1')
     {
       HCuOLED1.ClearBuffer();
       HCuOLED2.Cursor(0, 0);
       HCuOLED1.Bitmap(128, 8, Eye_Left[EYECLOSED]);
       HCuOLED1.Refresh();
     }
-    if (HeadKey[1] == '2')
+    if (Key == '2')
     {
       HCuOLED1.ClearBuffer();
       HCuOLED2.Cursor(0, 0);
       HCuOLED1.Bitmap(128, 8, Eye_Left[EYEOPEN]);
       HCuOLED1.Refresh();
     }
-    if (HeadKey[1] == '3')
+    if (Key == '3')
     {
       HCuOLED2.ClearBuffer();
       HCuOLED2.Cursor(0, 0);
       HCuOLED2.Bitmap(128, 8, Eye_Right[EYECLOSED]);
       HCuOLED2.Refresh();
     }
-    if (HeadKey[1] == '4')
+    if (Key == '4')
     {
       HCuOLED2.ClearBuffer();
       HCuOLED2.Cursor(0, 0);
       HCuOLED2.Bitmap(128, 8, Eye_Right[EYEOPEN]);
       HCuOLED2.Refresh();
     }
-    if (HeadKey[1] == '5')
+    if (Key == '5')
     {
       HCuOLED1.ClearBuffer();
       HCuOLED1.SetFont(Terminal_8pt);
@@ -337,28 +363,26 @@ void loop() {
       HCuOLED1.Cursor(0, 0);
       HCuOLED1.Refresh();
     }
-    if (HeadKey[1] == 'F')
+    if (Key == 'F')
     {
-      receiveEvent("$K_1;1;1;0;1;0;0;123456789");
+      receiveEvent("$E_1;1;1;0;1;0;0;123456789");
     }
-    if (HeadKey[1] == 'R')
+    if (Key == 'R')
     {
-      receiveEvent("$K_1;1;1;0;2;0;0;123456789");
-      receiveEvent("$K_1;1;0;0;2;0;16;123456789");
-      receiveEvent("$K_1;1;0;0;2;0;32;123456789");
-      receiveEvent("$K_1;1;0;0;2;0;48;123456789");
+      receiveEvent(testString1);
+      receiveEvent(testString2);
+      receiveEvent(testString3);
+      receiveEvent(testString4);
     }
-    if (HeadKey[1] == 'U')
+    if (Key == 'U')
     {
-      receiveEvent("$K_1;1;1;0;3;0;0;123456789");
-      receiveEvent("$K_1;1;0;0;3;0;24;123456789");
-      receiveEvent("$K_1;1;0;0;3;0;48;123456789");
+      receiveEvent(testString5);
+      receiveEvent(testString6);
+      receiveEvent(testString7);
+      receiveEvent(testString8);
     }
   }
 
-
-
-
-
-
-}
+  void loop() {
+    keypad.getKey();
+  }

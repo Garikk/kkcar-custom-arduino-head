@@ -86,7 +86,7 @@ byte colPins[COLS] = {A0, A1, A2, A3}; //connect to the column pinouts of the ke
 
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
-void DrawText(byte Display, byte ClearDisplay, byte ClearInvertMode, byte Font, byte PosX, byte PosY, char Text[])
+void DrawText(byte Display, byte NeedRefresh, byte ClearDisplay, byte ClearInvertMode, byte Font, byte PosX, byte PosY, char Text[])
 {
 
   if (Display == 1)
@@ -114,7 +114,8 @@ void DrawText(byte Display, byte ClearDisplay, byte ClearInvertMode, byte Font, 
     //
     HCuOLED1.Print(Text);
     //
-    HCuOLED1.Refresh();
+    if (NeedRefresh==1)
+      HCuOLED1.Refresh();
     //
   }
   else if (Display == 2)
@@ -139,7 +140,8 @@ void DrawText(byte Display, byte ClearDisplay, byte ClearInvertMode, byte Font, 
     //
     HCuOLED2.Print(Text);
     //
-    HCuOLED2.Refresh();
+    if (NeedRefresh==1)
+      HCuOLED2.Refresh();
     //
   }
 
@@ -153,11 +155,13 @@ void TextFunction1(char ExecLineCA[])
   char *Read;
   //
   byte Display = 1;
-  byte Clear = 1;
+  byte NeedRefresh=1;
+  byte Clear = 0;
   byte Invert = 0;
   byte Font = 1;
   byte PosX = 0;
   byte PosY = 0;
+  
   char *Text;
   //
   Text = "no data";
@@ -174,23 +178,26 @@ void TextFunction1(char ExecLineCA[])
         Display = String(Read).toInt();
         break;
       case 4:
+        NeedRefresh =  String(Read).toInt();
+      case 5:
         Clear = String(Read).toInt();
         break;
-      case 5:
+      case 6:
         Invert = String(Read).toInt();
         break;
-      case 6:
+      case 7:
         Font = String(Read).toInt();
         break;
-      case 7:
+      case 8:
         PosX = String(Read).toInt();
         break;
-      case 8:
+      case 9:
         PosY = String(Read).toInt();
         break;
-      case 9:
+      case 10:
         Text = Read;
         break;
+
     }
     //
     Read = strtok(NULL, ";");
@@ -198,7 +205,7 @@ void TextFunction1(char ExecLineCA[])
 
 
 
-  DrawText(Display,  Clear,  Invert,  Font,  PosX,  PosY, Text);
+  DrawText(Display,NeedRefresh,  Clear,  Invert,  Font,  PosX,  PosY, Text);
 
 
 

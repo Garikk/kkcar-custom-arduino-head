@@ -86,33 +86,21 @@ byte colPins[COLS] = {A0, A1, A2, A3}; //connect to the column pinouts of the ke
 
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
-//
-// $[CMD];[OP1];[OP2];[OP3];[OP4];[OPn]
-//
-// CMD=1
-// OP1 - Display number
-// OP2 - Clear screen
-// OP3 - Invert
-// OP4 - Font
-// OP5 - Position X
-// OP6 - Position Y
-// OP7 - Text
-//
-// CMD=2
-// comming soon
-//
-
-void DrawText(byte Display, byte Clear, byte Invert, byte Font, byte PosX, byte PosY, char Text[])
+void DrawText(byte Display, byte ClearDisplay, byte ClearInvertMode, byte Font, byte PosX, byte PosY, char Text[])
 {
 
   if (Display == 1)
   {
 
     //
-    if (Clear == 1)
+    if (ClearDisplay == 1)
+    {
       HCuOLED1.ClearBuffer();
-    if (Invert == 1)
+    }
+    if (ClearInvertMode == 1)
       HCuOLED1.DrawMode(INVERT);
+    else if (ClearInvertMode == 2)
+      HCuOLED1.DrawMode(CLEAR);
     else
       HCuOLED1.DrawMode(NORMAL);
     if (Font == 1)
@@ -124,7 +112,7 @@ void DrawText(byte Display, byte Clear, byte Invert, byte Font, byte PosX, byte 
     //
     HCuOLED1.Cursor(PosX, PosY);
     //
-    HCuOLED2.Print(Text);
+    HCuOLED1.Print(Text);
     //
     HCuOLED1.Refresh();
     //
@@ -132,10 +120,12 @@ void DrawText(byte Display, byte Clear, byte Invert, byte Font, byte PosX, byte 
   else if (Display == 2)
   {
     //
-    if (Clear == 1)
+    if (ClearDisplay == 1)
       HCuOLED2.ClearBuffer();
-    if (Invert == 1)
+    if (ClearInvertMode == 1)
       HCuOLED2.DrawMode(INVERT);
+    else if (ClearInvertMode == 2)
+      HCuOLED2.DrawMode(CLEAR);
     else
       HCuOLED2.DrawMode(NORMAL);
     if (Font == 1)
@@ -290,18 +280,18 @@ void PrintText(int Display, int X, int Y, int Font, char Text[])
 void keypadEvent(KeypadEvent key) {
   switch (keypad.getState()) {
     case PRESSED:
-      ExecKey((char)key);
+      ExecKey(1, (char)key);
       break;
     case RELEASED:
-      //Serial.println("RL__"+ (String)key);
+      ExecKey(2, (char)key);
       break;
     case HOLD:
-      //Serial.println("HL__"+(String)key);
+      ExecKey(3, (char)key);
       break;
   }
 }
 
-void ExecKey(char Key)
+void ExecKey(byte act, char Key)
 {
   if (Key == '1')
   {
@@ -331,14 +321,36 @@ void ExecKey(char Key)
     HCuOLED2.Bitmap(128, 8, Eye_Right[EYEOPEN]);
     HCuOLED2.Refresh();
   }
-  if (Key == '5')
+
+  if (Key == 'D')
   {
-    HCuOLED1.ClearBuffer();
-    HCuOLED1.SetFont(Terminal_8pt);
-    HCuOLED1.Cursor(0, 0);
-    HCuOLED1.Print("TEST STRING");
+    // HCuOLED1.ClearBuffer();
+    HCuOLED1.SetFont(MedProp_11pt);
+    HCuOLED1.Cursor(00, 48);
+
+    HCuOLED1.Print("050");
+    HCuOLED1.Cursor(00, 48);
+    HCuOLED1.DrawMode(INVERT);
+    HCuOLED1.Print("050");
+    HCuOLED1.Cursor(00, 48);
     HCuOLED1.Refresh();
   }
+  if (Key == 'U')
+  {
+    HCuOLED1.ClearBuffer();
+
+  }
+  Serial.println(Key);
+  Serial.print("$K_CTRL_");
+  if (act == 1)
+    Serial.print("$KPR_");
+  else if (act == 2)
+    Serial.print("$KRL_");
+  else if (act == 3)
+    Serial.print("$KHL_");
+
+  Serial.println(Key);
+
 }
 
 void loop() {

@@ -68,6 +68,7 @@ HCuOLED HCuOLED1(SSD1307, CS_DI1, DC_DI1, RST_DI1); // For SH1106 displays (HCMO
 HCuOLED HCuOLED2(SSD1307, CS_DI2, DC_DI2, RST_DI2); // For SH1106 displays (HCMODU0058 & HCMODU0059)
 
 byte val = 0;
+byte LastActiveDisplay;
 
 String inputString = "";
 
@@ -88,10 +89,23 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 void DrawText(byte Display, byte NeedRefresh, byte ClearDisplay, byte ClearInvertMode, byte Font, byte PosX, byte PosY, char Text[])
 {
+  if (ClearDisplay==0)
+  {
+    if (LastActiveDisplay!=Display)
+    {
+      ClearDisplay=1;
+      NeedRefresh=1;
+
+      if (LastActiveDisplay==1)
+        HCuOLED1.Refresh();
+      else
+        HCuOLED2.Refresh();
+    }
+    
+  }
 
   if (Display == 1)
   {
-
     //
     if (ClearDisplay == 1)
     {
@@ -144,7 +158,7 @@ void DrawText(byte Display, byte NeedRefresh, byte ClearDisplay, byte ClearInver
       HCuOLED2.Refresh();
     //
   }
-
+  LastActiveDisplay=Display;
 
 }
 
@@ -265,6 +279,8 @@ void setup() {
   //
   keypad.addEventListener(keypadEvent);
 
+  //
+  LastActiveDisplay=10;
 }
 
 void PrintText(int Display, int X, int Y, int Font, char Text[])
@@ -327,25 +343,6 @@ void ExecKey(byte act, char Key)
     HCuOLED2.Cursor(0, 0);
     HCuOLED2.Bitmap(128, 8, Eye_Right[EYEOPEN]);
     HCuOLED2.Refresh();
-  }
-
-  if (Key == 'D')
-  {
-    // HCuOLED1.ClearBuffer();
-    HCuOLED1.SetFont(MedProp_11pt);
-    HCuOLED1.Cursor(00, 48);
-
-    HCuOLED1.Print("050");
-    HCuOLED1.Cursor(00, 48);
-    HCuOLED1.DrawMode(INVERT);
-    HCuOLED1.Print("050");
-    HCuOLED1.Cursor(00, 48);
-    HCuOLED1.Refresh();
-  }
-  if (Key == 'U')
-  {
-    HCuOLED1.ClearBuffer();
-
   }
   Serial.println(Key);
   Serial.print("$K_CTRL_");

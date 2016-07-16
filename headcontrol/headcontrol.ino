@@ -55,6 +55,10 @@ const PROGMEM byte Eye_Right[][1024] =
 #define DC_DI1 9
 #define RST_DI1 5
 
+#define VOL_1 A4
+#define VOL_2 A5
+
+
 /* Module 2 digital pins */
 #define CS_DI2 7
 #define DC_DI2 6
@@ -71,6 +75,11 @@ byte val = 0;
 byte LastActiveDisplay;
 
 String inputString = "";
+unsigned long currentTime;
+unsigned long loopTime;
+unsigned char encoder_A;
+unsigned char encoder_B;
+unsigned char encoder_A_prev = 0;
 
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //three columns
@@ -89,19 +98,19 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 void DrawText(byte Display, byte NeedRefresh, byte ClearDisplay, byte ClearInvertMode, byte Font, byte PosX, byte PosY, char Text[])
 {
-  if (ClearDisplay==0)
+  if (ClearDisplay == 0)
   {
-    if (LastActiveDisplay!=Display)
+    if (LastActiveDisplay != Display)
     {
-      ClearDisplay=1;
-      NeedRefresh=1;
+      ClearDisplay = 1;
+      NeedRefresh = 1;
 
-      if (LastActiveDisplay==1)
+      if (LastActiveDisplay == 1)
         HCuOLED1.Refresh();
       else
         HCuOLED2.Refresh();
     }
-    
+
   }
 
   if (Display == 1)
@@ -128,7 +137,7 @@ void DrawText(byte Display, byte NeedRefresh, byte ClearDisplay, byte ClearInver
     //
     HCuOLED1.Print(Text);
     //
-    if (NeedRefresh==1)
+    if (NeedRefresh == 1)
       HCuOLED1.Refresh();
     //
   }
@@ -154,11 +163,11 @@ void DrawText(byte Display, byte NeedRefresh, byte ClearDisplay, byte ClearInver
     //
     HCuOLED2.Print(Text);
     //
-    if (NeedRefresh==1)
+    if (NeedRefresh == 1)
       HCuOLED2.Refresh();
     //
   }
-  LastActiveDisplay=Display;
+  LastActiveDisplay = Display;
 
 }
 
@@ -169,13 +178,13 @@ void TextFunction1(char ExecLineCA[])
   char *Read;
   //
   byte Display = 1;
-  byte NeedRefresh=1;
+  byte NeedRefresh = 1;
   byte Clear = 0;
   byte Invert = 0;
   byte Font = 1;
   byte PosX = 0;
   byte PosY = 0;
-  
+
   char *Text;
   //
   Text = "no data";
@@ -219,7 +228,7 @@ void TextFunction1(char ExecLineCA[])
 
 
 
-  DrawText(Display,NeedRefresh,  Clear,  Invert,  Font,  PosX,  PosY, Text);
+  DrawText(Display, NeedRefresh,  Clear,  Invert,  Font,  PosX,  PosY, Text);
 
 
 
@@ -271,6 +280,11 @@ void serialEvent() {
 
 
 void setup() {
+  //volume control
+  pinMode(VOL_1, INPUT);
+  pinMode(VOL_2, INPUT);
+  currentTime = millis();
+  loopTime = currentTime;
   //Prepare displays
   HCuOLED1.Reset();
   HCuOLED2.Reset();
@@ -280,7 +294,7 @@ void setup() {
   keypad.addEventListener(keypadEvent);
 
   //
-  LastActiveDisplay=10;
+  LastActiveDisplay = 10;
 }
 
 void PrintText(int Display, int X, int Y, int Font, char Text[])
@@ -344,7 +358,7 @@ void ExecKey(byte act, char Key)
     HCuOLED2.Bitmap(128, 8, Eye_Right[EYEOPEN]);
     HCuOLED2.Refresh();
   }
-  Serial.println(Key);
+  //  Serial.println(Key);
   Serial.print("$K_CTRL_");
   if (act == 1)
     Serial.print("$KPR_");
@@ -359,4 +373,25 @@ void ExecKey(byte act, char Key)
 
 void loop() {
   keypad.getKey();
+  //
+  currentTime = millis();
+  if (currentTime >= (loopTime + 5)) { // проверяем каждые 5мс (200 Гц)
+    encoder_A = digitalRead(VOL_1);     // считываем состояние выхода А энкодера
+    encoder_B = digitalRead(VOL_2);     // считываем состояние выхода B энкодера
+    if ((!encoder_A) && (encoder_A_prev)) {  // если состояние изменилось с положительного к нулю
+      if (encoder_B) {
+        Serial.println("$K_CTRL_$KPR_VOLUP");
+      }
+      else {
+        Serial.println("$K_CTRL_$KPR_VOLDOWN");
+      }
+    }
+    encoder_A_prev = encoder_A;     // сохраняем значение А для следующего цикла
+    loopTime = currentTime;
+  }
+
+
+  //
+
+
 }

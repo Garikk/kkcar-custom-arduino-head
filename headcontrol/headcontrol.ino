@@ -58,7 +58,6 @@ const PROGMEM byte Eye_Right[][1024] =
 #define VOL_1 A4
 #define VOL_2 A5
 
-
 /* Module 2 digital pins */
 #define CS_DI2 7
 #define DC_DI2 6
@@ -80,6 +79,8 @@ unsigned long loopTime;
 unsigned char encoder_A;
 unsigned char encoder_B;
 unsigned char encoder_A_prev = 0;
+
+unsigned char EJT_BTN_STATE=0;
 
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //three columns
@@ -252,15 +253,18 @@ void ExecFunction(int CMD, char ExecLine[])
 
 void receiveEvent(char cmd[]) {
 
-  Serial.println(cmd);
+  //Serial.println(cmd);
   if (cmd[0] == '$' & cmd[1] == 'E' & cmd[2] == '_') //("$E_"))
   {
     ExecFunction(1, cmd);
   }
-  if (cmd[0] == 'A' & cmd[1] == 'T' & cmd[2] == 'I')
+  if (sizeof(cmd) == 3)
   {
-    Serial.println("KKSmarthead");
-    Serial.println("Custom head device, keymatrix and double oled spi displays");
+    if (cmd[0] == 'A' & cmd[1] == 'T' & cmd[2] == 'I')
+    {
+      Serial.println("KKSmarthead");
+      Serial.println("Custom head device, keymatrix and double oled spi displays");
+    }
   }
 
 }
@@ -283,6 +287,7 @@ void setup() {
   //volume control
   pinMode(VOL_1, INPUT);
   pinMode(VOL_2, INPUT);
+  
   currentTime = millis();
   loopTime = currentTime;
   //Prepare displays
@@ -390,7 +395,7 @@ void loop() {
     loopTime = currentTime;
   }
 
-
+  
   //
 
 

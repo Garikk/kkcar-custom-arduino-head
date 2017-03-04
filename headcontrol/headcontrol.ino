@@ -252,20 +252,20 @@ void ExecFunction(int CMD, char ExecLine[])
 
 
 void receiveEvent(char cmd[]) {
-
-  //Serial.println(cmd);
+Serial.println(sizeof(cmd) );
+Serial.println(sizeof(cmd) );
   if (cmd[0] == '$' & cmd[1] == 'E' & cmd[2] == '_') //("$E_"))
   {
     ExecFunction(1, cmd);
   }
-  if (sizeof(cmd) == 3)
-  {
-    if (cmd[0] == 'A' & cmd[1] == 'T' & cmd[2] == 'I')
+  //if (sizeof(cmd) > 3)
+  //{
+    if ((cmd[0] == 'A') & (cmd[1] == 'T') & (cmd[2] == 'I'))
     {
       Serial.println("KKSmarthead");
       Serial.println("Custom head device, keymatrix and double oled spi displays");
     }
-  }
+  //}
 
 }
 

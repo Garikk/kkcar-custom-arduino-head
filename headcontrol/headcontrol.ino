@@ -80,7 +80,7 @@ unsigned char encoder_A;
 unsigned char encoder_B;
 unsigned char encoder_A_prev = 0;
 
-unsigned char EJT_BTN_STATE=0;
+unsigned char EJT_BTN_STATE = 0;
 
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //three columns
@@ -259,28 +259,33 @@ void receiveEvent(char cmd[]) {
   }
   //if (sizeof(cmd) > 3)
   //{
-    if ((cmd[0] == 'A') & (cmd[1] == 'T') & (cmd[2] == 'I'))
-    {
-      Serial.println("KKSmarthead");
-      Serial.println("Custom head device, keymatrix and double oled spi displays");
-    }
+  if ((cmd[0] == 'A') & (cmd[1] == 'T') & (cmd[2] == 'I'))
+  {
+    Serial.println("KKSmarthead");
+    Serial.println("Custom head device, keymatrix and double oled spi displays");
+  }
   //}
 
 }
 
 void serialEvent() {
+
   while (Serial.available()) {
     char inChar = (char)Serial.read();
-    if (inChar == '\r') {
-      int CL=inputString.length()+1;
+    if ((inChar=='\r' | inChar == '\n')) {
+
+      int CL = inputString.length() + 1;
       char CharArr[CL];
       inputString.toCharArray(CharArr, CL);
       inputString = "";
+
+      Serial.println(CharArr);
       receiveEvent(CharArr);
     }
-      else
-      {
-        inputString += inChar;
+    else
+    {
+
+      inputString += inChar;
     }
   }
 }
@@ -290,7 +295,7 @@ void setup() {
   //volume control
   pinMode(VOL_1, INPUT);
   pinMode(VOL_2, INPUT);
-  
+
   currentTime = millis();
   loopTime = currentTime;
   //Prepare displays
@@ -398,7 +403,7 @@ void loop() {
     loopTime = currentTime;
   }
 
-  
+
   //
 
 

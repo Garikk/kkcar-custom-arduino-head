@@ -188,7 +188,7 @@ void TextFunction1(char ExecLineCA[])
 
   char *Text;
   //
-  Text = "no data";
+  Text = "";
 
 
   Read = strtok(ExecLineCA, ";");
@@ -252,8 +252,7 @@ void ExecFunction(int CMD, char ExecLine[])
 
 
 void receiveEvent(char cmd[]) {
-Serial.println(sizeof(cmd) );
-Serial.println(sizeof(cmd) );
+
   if (cmd[0] == '$' & cmd[1] == 'E' & cmd[2] == '_') //("$E_"))
   {
     ExecFunction(1, cmd);
@@ -272,12 +271,16 @@ Serial.println(sizeof(cmd) );
 void serialEvent() {
   while (Serial.available()) {
     char inChar = (char)Serial.read();
-    inputString += inChar;
-    if (inChar == '\n') {
-      char CharArr[inputString.length() + 1];
-      inputString.toCharArray(CharArr, inputString.length() + 1);
+    if (inChar == '\r') {
+      int CL=inputString.length()+1;
+      char CharArr[CL];
+      inputString.toCharArray(CharArr, CL);
       inputString = "";
       receiveEvent(CharArr);
+    }
+      else
+      {
+        inputString += inChar;
     }
   }
 }

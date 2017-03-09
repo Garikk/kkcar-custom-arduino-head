@@ -272,7 +272,7 @@ void serialEvent() {
 
   while (Serial.available()) {
     char inChar = (char)Serial.read();
-    if ((inChar=='\r' | inChar == '\n')) {
+    if ((inChar == '\n')) {
 
       int CL = inputString.length() + 1;
       char CharArr[CL];

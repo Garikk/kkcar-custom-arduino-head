@@ -1,4 +1,4 @@
-# kkcar-custom-arduino-head
+# kkiot-custom-arduino-head
 Chrysler RBK Stereo head panel control
 
-https://github.com/Garikk/kkdev-carsystem
+https://github.com/Garikk/kkdev-iotsystem
